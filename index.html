@@ -30,24 +30,26 @@
     button:hover { background-color: #45a049; }
     .error { color: red; }
     .success { color: green; }
-    #issue-password-modal {
+    .modal {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
+      z-index: 1000;
     }
-    #issue-password-modal div {
+    .modal div {
       background-color: white;
       padding: 20px;
       border-radius: 5px;
       text-align: center;
+      width: 300px;
     }
-    #issue-password-modal input, #issue-password-modal button {
+    .modal input, .modal button {
       font-size: 18px;
       padding: 10px;
       margin: 10px;
@@ -108,7 +110,7 @@
 </head>
 <body>
   <h1>쿠폰 관리 시스템</h1>
-  <button id="export-button" onclick="exportToCSV()">CSV로 내보내기</button>
+  <button id="export-button" onclick="showExportPasswordModal()">CSV로 내보내기</button>
 
   <!-- 관리자: 쿠폰 발급 -->
   <div class="section" id="admin-section">
@@ -159,7 +161,7 @@
   </div>
 
   <!-- 발급 비밀번호 입력 모달 -->
-  <div id="issue-password-modal">
+  <div class="modal" id="issue-password-modal">
     <div>
       <h3>관리자 비밀번호 입력</h3>
       <input type="password" id="issue-admin-password" placeholder="비밀번호 입력">
@@ -168,17 +170,34 @@
     </div>
   </div>
 
+  <!-- CSV 내보내기 비밀번호 입력 모달 -->
+  <div class="modal" id="export-password-modal">
+    <div>
+      <h3>관리자 비밀번호 입력</h3>
+      <input type="password" id="export-admin-password" placeholder="비밀번호 입력">
+      <button onclick="verifyExportPassword()">확인</button>
+      <button onclick="closeExportPasswordModal()">취소</button>
+    </div>
+  </div>
+
   <script>
     // 쿠폰 데이터 및 취소 내역 저장 (localStorage)
-    let coupons = JSON.parse(localStorage.getItem('coupons')) || [];
-    let cancelHistory = JSON.parse(localStorage.getItem('cancelHistory')) || [];
+    let coupons = [];
+    let cancelHistory = [];
+    try {
+      coupons = JSON.parse(localStorage.getItem('coupons')) || [];
+      cancelHistory = JSON.parse(localStorage.getItem('cancelHistory')) || [];
+    } catch (e) {
+      console.error('localStorage 파싱 오류:', e);
+      localStorage.setItem('coupons', JSON.stringify([]));
+      localStorage.setItem('cancelHistory', JSON.stringify([]));
+    }
     const ADMIN_PASSWORD = "admin123"; // 관리자 비밀번호
     let currentIssueName = "";
 
     // 오늘 날짜 계산
     function getToday() {
-      const today = new Date();
-      return today.toISOString().split('T')[0];
+      return new Date().toISOString().split('T')[0];
     }
 
     // 7일 후 기본 만료일 설정
@@ -220,6 +239,10 @@
       const count = parseInt(document.getElementById('coupon-count').value);
       const message = document.getElementById('admin-message');
 
+      if (!password) {
+        message.innerHTML = '<span class="error">비밀번호를 입력하세요!</span>';
+        return;
+      }
       if (password !== ADMIN_PASSWORD) {
         message.innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
         return;
@@ -238,10 +261,46 @@
       };
 
       coupons.push(coupon);
-      localStorage.setItem('coupons', JSON.stringify(coupons));
+      try {
+        localStorage.setItem('coupons', JSON.stringify(coupons));
+      } catch (e) {
+        console.error('localStorage 저장 오류:', e);
+        message.innerHTML = '<span class="error">쿠폰 저장 중 오류 발생!</span>';
+        return;
+      }
       message.innerHTML = `<span class="success">쿠폰 발급 완료! 코드: ${code}</span>`;
       document.getElementById('employee-name').value = '';
       closeIssuePasswordModal();
+    }
+
+    // CSV 내보내기 비밀번호 모달 표시
+    function showExportPasswordModal() {
+      document.getElementById('export-password-modal').style.display = 'flex';
+      document.getElementById('export-admin-password').value = '';
+      document.getElementById('admin-message').innerHTML = '';
+    }
+
+    // CSV 내보내기 비밀번호 모달 닫기
+    function closeExportPasswordModal() {
+      document.getElementById('export-password-modal').style.display = 'none';
+    }
+
+    // CSV 내보내기 비밀번호 확인
+    function verifyExportPassword() {
+      const password = document.getElementById('export-admin-password').value;
+      const message = document.getElementById('admin-message');
+
+      if (!password) {
+        message.innerHTML = '<span class="error">비밀번호를 입력하세요!</span>';
+        return;
+      }
+      if (password !== ADMIN_PASSWORD) {
+        message.innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
+        return;
+      }
+
+      closeExportPasswordModal();
+      exportToCSV();
     }
 
     // 쿠폰 사용
@@ -278,7 +337,13 @@
       if (coupon.remaining === 0) {
         coupon.status = '사용 완료';
       }
-      localStorage.setItem('coupons', JSON.stringify(coupons));
+      try {
+        localStorage.setItem('coupons', JSON.stringify(coupons));
+      } catch (e) {
+        console.error('localStorage 저장 오류:', e);
+        message.innerHTML = '<span class="error">쿠폰 사용 저장 중 오류 발생!</span>';
+        return;
+      }
       message.innerHTML = `<span class="success">쿠폰 1장 사용 완료! (남은 쿠폰: ${coupon.remaining})</span>`;
       document.getElementById('use-name').value = '';
       document.getElementById('use-date').value = getToday();
@@ -294,7 +359,6 @@
         return;
       }
 
-      // 가장 최근 사용된 쿠폰 찾기
       const usedCoupons = coupons
         .filter(c => c.name === name && c.status === '사용 완료')
         .sort((a, b) => new Date(b.useDate) - new Date(a.useDate));
@@ -318,19 +382,29 @@
         return;
       }
 
-      // 취소 내역 저장
       cancelHistory.push({
         name: coupon.name,
         code: coupon.code,
         cancelDate: getToday(),
         originalUseDate: coupon.useDate
       });
-      localStorage.setItem('cancelHistory', JSON.stringify(cancelHistory));
-
+      try {
+        localStorage.setItem('cancelHistory', JSON.stringify(cancelHistory));
+      } catch (e) {
+        console.error('localStorage 저장 오류:', e);
+        message.innerHTML = '<span class="error">쿠폰 취소 저장 중 오류 발생!</span>';
+        return;
+      }
       coupon.status = '미사용';
       coupon.remaining += 1;
       coupon.useDate = null;
-      localStorage.setItem('coupons', JSON.stringify(coupons));
+      try {
+        localStorage.setItem('coupons', JSON.stringify(coupons));
+      } catch (e) {
+        console.error('localStorage 저장 오류:', e);
+        message.innerHTML = '<span class="error">쿠폰 취소 저장 중 오류 발생!</span>';
+        return;
+      }
       message.innerHTML = `<span class="success">쿠폰 취소 완료!</span>`;
       document.getElementById('cancel-name').value = '';
     }
@@ -340,7 +414,7 @@
       const name = document.getElementById('query-name').value.trim();
       const tableBody = document.getElementById('coupon-table-body');
 
-      tableBody.innerHTML = ''; // 기존 테이블 내용 제거
+      tableBody.innerHTML = '';
 
       if (!name) {
         tableBody.innerHTML = '<tr><td colspan="5"><span class="error">이름을 입력하세요!</span></td></tr>';
@@ -356,11 +430,11 @@
       filteredCoupons.forEach(coupon => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${coupon.name}</td>
-          <td>${coupon.issueDate}</td>
+          <td>${coupon.name || ''}</td>
+          <td>${coupon.issueDate || ''}</td>
           <td>${coupon.useDate || '미사용'}</td>
-          <td>${coupon.expiryDate}</td>
-          <td>${coupon.remaining}</td>
+          <td>${coupon.expiryDate || ''}</td>
+          <td>${coupon.remaining || 0}</td>
         `;
         tableBody.appendChild(row);
       });
@@ -368,48 +442,52 @@
 
     // CSV로 내보내기
     function exportToCSV() {
-      const headers = ['이름', '쿠폰 코드', '쿠폰 수', '남은 쿠폰', '발급일', '사용일', '만료일', '상태'];
-      const csvRows = [headers.join(',')];
-      coupons.forEach(coupon => {
-        const row = [
-          coupon.name,
-          coupon.code,
-          coupon.count,
-          coupon.remaining,
-          coupon.issueDate,
-          coupon.useDate || '',
-          coupon.expiryDate,
-          coupon.status
-        ].map(val => `"${val}"`).join(',');
-        csvRows.push(row);
+      try {
+        const headers = ['이름', '쿠폰 코드', '쿠폰 수', '남은 쿠폰', '발급일', '사용일', '만료일', '상태'];
+        const csvRows = [headers.join(',')];
+        coupons.forEach(coupon => {
+          const row = [
+            coupon.name || '',
+            coupon.code || '',
+            coupon.count || 0,
+            coupon.remaining || 0,
+            coupon.issueDate || '',
+            coupon.useDate || '',
+            coupon.expiryDate || '',
+            coupon.status || ''
+          ].map(val => `"${val}"`).join(',');
+          csvRows.push(row);
 
-        // 해당 쿠폰 코드에 대한 취소 내역 추가
-        const relatedCancels = cancelHistory.filter(h => h.code === coupon.code);
-        if (relatedCancels.length > 0) {
-          csvRows.push('"","취소 내역"');
-          csvRows.push('"이름","쿠폰 코드","취소일","원래 사용일"');
-          relatedCancels.forEach(cancel => {
-            const cancelRow = [
-              cancel.name,
-              cancel.code,
-              cancel.cancelDate,
-              cancel.originalUseDate
-            ].map(val => `"${val}"`).join(',');
-            csvRows.push(cancelRow);
-          });
-        }
-      });
+          const relatedCancels = cancelHistory.filter(h => h.code === coupon.code);
+          if (relatedCancels.length > 0) {
+            csvRows.push('"","취소 내역"');
+            csvRows.push('"이름","쿠폰 코드","취소일","원래 사용일"');
+            relatedCancels.forEach(cancel => {
+              const cancelRow = [
+                cancel.name || '',
+                cancel.code || '',
+                cancel.cancelDate || '',
+                cancel.originalUseDate || ''
+              ].map(val => `"${val}"`).join(',');
+              csvRows.push(cancelRow);
+            });
+          }
+        });
 
-      const csvContent = '\uFEFF' + csvRows.join('\n'); // UTF-8 BOM 추가
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'coupons.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      document.getElementById('admin-message').innerHTML = '<span class="success">CSV 파일 다운로드 완료!</span>';
+        const csvContent = '\uFEFF' + csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'coupons.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        document.getElementById('admin-message').innerHTML = '<span class="success">CSV 파일 다운로드 완료!</span>';
+      } catch (error) {
+        console.error('CSV 내보내기 오류:', error);
+        document.getElementById('admin-message').innerHTML = '<span class="error">CSV 내보내기 중 오류 발생!</span>';
+      }
     }
   </script>
 </body>
