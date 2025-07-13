@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>대기챙김 쿠폰 관리</title>
+  <title>쿠폰 관리 시스템</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,7 +14,20 @@
     }
     h1, h2, h3 { color: #333; }
     .section { margin: 20px auto; max-width: 800px; }
-    input, select, button {
+    .employee-container {
+      display: flex;
+      justify-content: space-between;
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    .employee-section {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 48%;
+    }
+    input, button {
       font-size: 18px;
       padding: 10px;
       margin: 5px;
@@ -30,66 +43,6 @@
     button:hover { background-color: #45a049; }
     .error { color: red; }
     .success { color: green; }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal div {
-      background-color: white;
-      padding: 20px;
-      border-radius: 5px;
-      text-align: center;
-      width: 300px;
-    }
-    .modal input, .modal button {
-      font-size: 18px;
-      padding: 10px;
-      margin: 10px;
-      width: 80%;
-    }
-    #export-button {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 1000;
-    }
-    #export-button:hover {
-      background-color: #45a049;
-    }
-    .employee-container {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      max-width: 800px;
-      margin: 20px auto;
-    }
-    .employee-section {
-      flex: 1;
-      background-color: white;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    .employee-section h3 {
-      margin-top: 0;
-    }
-    .employee-section input, .employee-section button {
-      display: block;
-      margin: 10px auto;
-    }
     table {
       width: 100%;
       max-width: 800px;
@@ -106,247 +59,183 @@
       background-color: #4CAF50;
       color: white;
     }
+    #modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      text-align: center;
+      width: 300px;
+    }
   </style>
 </head>
 <body>
   <h1>쿠폰 관리 시스템</h1>
-  <button id="export-button" onclick="showExportPasswordModal()">CSV</button>
-
-  <!-- 관리자: 쿠폰 발급 -->
-  <div class="section" id="admin-section">
-    <h2>관리자: 쿠폰 발급</h2>
-    <input type="text" id="employee-name" placeholder="이름 입력">
-    <select id="coupon-count">
-      <option value="1">1장</option>
-      <option value="2">2장</option>
-    </select>
-    <button onclick="showIssuePasswordModal()">쿠폰 발급</button>
-    <p id="admin-message"></p>
-  </div>
-
-  <!-- 직원: 쿠폰 사용 및 취소 -->
-  <div class="employee-container">
-    <div class="employee-section" id="use-section">
-      <h3>쿠폰 사용</h3>
-      <input type="text" id="use-name" placeholder="이름 입력">
-      <input type="date" id="use-date">
-      <button onclick="useCoupon()">쿠폰 사용</button>
-      <p id="employee-message"></p>
+  <a href="admin.html" style="position: fixed; top: 20px; left: 20px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none;">관리자 페이지</a>
+  <button onclick="openModal('export')" style="position: fixed; top: 20px; right: 20px; background-color: #4CAF50; color: white; padding: 10px 20px; border-radius: 5px;">CSV로 내보내기</button>
+  <div class="section">
+    <div class="employee-container">
+      <div class="employee-section">
+        <h3>쿠폰 사용</h3>
+        <input type="text" id="employee-name" placeholder="이름 입력">
+        <input type="date" id="use-date">
+        <button onclick="useCoupon()">쿠폰 사용</button>
+        <div id="employee-message"></div>
+      </div>
+      <div class="employee-section">
+        <h3>쿠폰 취소</h3>
+        <input type="text" id="cancel-name" placeholder="이름 입력">
+        <button onclick="cancelCoupon()">쿠폰 취소</button>
+        <div id="cancel-message"></div>
+      </div>
     </div>
-    <div class="employee-section" id="cancel-section">
-      <h3>쿠폰 취소</h3>
-      <input type="text" id="cancel-name" placeholder="이름 입력">
-      <button onclick="cancelCoupon()">쿠폰 취소</button>
-      <p id="cancel-message"></p>
-    </div>
-  </div>
-
-  <!-- 쿠폰 조회 -->
-  <div class="section" id="coupon-query">
     <h2>쿠폰 조회</h2>
-    <input type="text" id="query-name" placeholder="이름 입력">
-    <button onclick="queryCoupons()">조회</button>
+    <input type="text" id="search-name" placeholder="이름 입력">
+    <button onclick="searchCoupon()">조회</button>
     <table id="coupon-table">
       <thead>
         <tr>
           <th>이름</th>
           <th>받은 날짜</th>
           <th>사용 날짜</th>
-          <th>만료일</th>
-          <th>남은 갯수</th>
+          <th>쿠폰 잔량</th>
         </tr>
       </thead>
       <tbody id="coupon-table-body"></tbody>
     </table>
   </div>
 
-  <!-- 발급 비밀번호 입력 모달 -->
-  <div class="modal" id="issue-password-modal">
-    <div>
+  <div id="modal">
+    <div class="modal-content">
       <h3>관리자 비밀번호 입력</h3>
-      <input type="password" id="issue-admin-password" placeholder="비밀번호 입력">
-      <button onclick="verifyIssuePassword()">확인</button>
-      <button onclick="closeIssuePasswordModal()">취소</button>
-    </div>
-  </div>
-
-  <!-- CSV 내보내기 비밀번호 입력 모달 -->
-  <div class="modal" id="export-password-modal">
-    <div>
-      <h3>관리자 비밀번호 입력</h3>
-      <input type="password" id="export-admin-password" placeholder="비밀번호 입력">
-      <button onclick="verifyExportPassword()">확인</button>
-      <button onclick="closeExportPasswordModal()">취소</button>
+      <input type="password" id="admin-password" placeholder="비밀번호 입력">
+      <button onclick="submitPassword()">확인</button>
+      <button onclick="closeModal()">취소</button>
     </div>
   </div>
 
   <script>
-    // 쿠폰 데이터 및 취소 내역 저장 (localStorage)
-    let coupons = [];
-    let cancelHistory = [];
-    try {
-      coupons = JSON.parse(localStorage.getItem('coupons')) || [];
-      cancelHistory = JSON.parse(localStorage.getItem('cancelHistory')) || [];
-    } catch (e) {
-      console.error('localStorage 파싱 오류:', e);
-      localStorage.setItem('coupons', JSON.stringify([]));
-      localStorage.setItem('cancelHistory', JSON.stringify([]));
-    }
-    const ADMIN_PASSWORD = "admin123"; // 관리자 비밀번호
-    let currentIssueName = "";
-
     // 오늘 날짜 계산
     function getToday() {
-      return new Date().toISOString().split('T')[0];
+      return new Date().toISOString().split('T')[0].slice(2); // 예: 25-07-13
     }
 
-    // 7일 후 기본 만료일 설정
-    function getDefaultExpiry() {
-      const date = new Date();
-      date.setDate(date.getDate() + 14);
-      return date.toISOString().split('T')[0];
+    // 날짜 포맷
+    function formatDate(date) {
+      const d = new Date(date);
+      return `${String(d.getFullYear()).slice(2)}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    // 페이지 로드 시 사용일 기본값 설정
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('use-date').value = getToday();
-    });
-
-    // 발급 비밀번호 모달 표시
-    function showIssuePasswordModal() {
-      const name = document.getElementById('employee-name').value.trim();
-      const message = document.getElementById('admin-message');
-
-      if (!name) {
-        message.innerHTML = '<span class="error">이름을 입력하세요!</span>';
-        return;
-      }
-
-      currentIssueName = name;
-      document.getElementById('issue-password-modal').style.display = 'flex';
-      document.getElementById('issue-admin-password').value = '';
-      document.getElementById('admin-message').innerHTML = '';
+    // 시간 포맷
+    function formatTime(date) {
+      const d = new Date(date);
+      return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
 
-    // 발급 비밀번호 모달 닫기
-    function closeIssuePasswordModal() {
-      document.getElementById('issue-password-modal').style.display = 'none';
-    }
-
-    // 발급 비밀번호 확인 및 쿠폰 발급
-    function verifyIssuePassword() {
-      const password = document.getElementById('issue-admin-password').value;
-      const count = parseInt(document.getElementById('coupon-count').value);
-      const message = document.getElementById('admin-message');
-
-      if (!password) {
-        message.innerHTML = '<span class="error">비밀번호를 입력하세요!</span>';
-        return;
-      }
-      if (password !== ADMIN_PASSWORD) {
-        message.innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
-        return;
-      }
-
-      const name = currentIssueName;
-      const code = `${name}_${getToday()}_${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
-      const coupon = {
-        name,
-        code,
-        count,
-        remaining: count,
-        issueDate: getToday(),
-        expiryDate: getDefaultExpiry(),
-        status: '미사용'
-      };
-
-      coupons.push(coupon);
+    // 만료된 쿠폰 제거
+    function removeExpiredCoupons() {
+      let coupons = [];
       try {
-        localStorage.setItem('coupons', JSON.stringify(coupons));
+        const storedCoupons = localStorage.getItem('coupons');
+        coupons = storedCoupons ? JSON.parse(storedCoupons) : [];
+        if (!Array.isArray(coupons)) {
+          throw new Error('Coupons is not an array');
+        }
       } catch (e) {
-        console.error('localStorage 저장 오류:', e);
-        message.innerHTML = '<span class="error">쿠폰 저장 중 오류 발생!</span>';
-        return;
+        console.error('localStorage 쿠폰 파싱 오류:', e);
+        return [];
       }
-      message.innerHTML = `<span class="success">쿠폰 발급 완료! 코드: ${code}</span>`;
-      document.getElementById('employee-name').value = '';
-      closeIssuePasswordModal();
+      const today = formatDate(new Date());
+      coupons = coupons.filter(c => c.expireDate >= today);
+      localStorage.setItem('coupons', JSON.stringify(coupons));
+      return coupons;
     }
 
-    // CSV 내보내기 비밀번호 모달 표시
-    function showExportPasswordModal() {
-      document.getElementById('export-password-modal').style.display = 'flex';
-      document.getElementById('export-admin-password').value = '';
-      document.getElementById('admin-message').innerHTML = '';
+    // 비밀번호 모달 열기
+    let currentAction = '';
+    function openModal(action) {
+      currentAction = action;
+      document.getElementById('modal').style.display = 'flex';
+      document.getElementById('admin-password').value = '';
+      document.getElementById('admin-password').focus();
     }
 
-    // CSV 내보내기 비밀번호 모달 닫기
-    function closeExportPasswordModal() {
-      document.getElementById('export-password-modal').style.display = 'none';
+    // 비밀번호 모달 닫기
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+      document.getElementById('employee-message').innerHTML = '';
+      document.getElementById('cancel-message').innerHTML = '';
     }
 
-    // CSV 내보내기 비밀번호 확인
-    function verifyExportPassword() {
-      const password = document.getElementById('export-admin-password').value;
-      const message = document.getElementById('admin-message');
-
-      if (!password) {
-        message.innerHTML = '<span class="error">비밀번호를 입력하세요!</span>';
+    // 비밀번호 확인
+    function submitPassword() {
+      const password = document.getElementById('admin-password').value;
+      if (password !== 'admin123') {
+        document.getElementById('employee-message').innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
+        document.getElementById('cancel-message').innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
         return;
       }
-      if (password !== ADMIN_PASSWORD) {
-        message.innerHTML = '<span class="error">잘못된 비밀번호입니다!</span>';
-        return;
+      if (currentAction === 'export') {
+        exportToCSV();
       }
-
-      closeExportPasswordModal();
-      exportToCSV();
+      closeModal();
     }
 
     // 쿠폰 사용
     function useCoupon() {
-      const name = document.getElementById('use-name').value.trim();
-      const useDate = document.getElementById('use-date').value;
+      const name = document.getElementById('employee-name').value.trim();
+      const useDate = document.getElementById('use-date').value.slice(2);
       const message = document.getElementById('employee-message');
 
-      if (!name) {
-        message.innerHTML = '<span class="error">이름을 입력하세요!</span>';
+      if (!name || !useDate) {
+        message.innerHTML = '<span class="error">이름과 사용일을 입력하세요!</span>';
         return;
       }
 
-      if (!useDate) {
-        message.innerHTML = '<span class="error">사용일을 선택하세요!</span>';
-        return;
-      }
-
-      const coupon = coupons.find(c => c.name === name && c.status === '미사용' && c.remaining > 0);
+      let coupons = removeExpiredCoupons();
+      const coupon = coupons.find(c => c.name === name && c.remaining > 0 && formatDate(new Date()) <= c.expireDate);
       if (!coupon) {
         message.innerHTML = '<span class="error">유효한 쿠폰이 없습니다!</span>';
         return;
       }
 
-      const today = new Date(getToday());
-      const expiry = new Date(coupon.expiryDate);
-      if (today > expiry) {
-        message.innerHTML = '<span class="error">쿠폰이 만료되었습니다!</span>';
+      coupon.remaining -= 1;
+      coupon.useDate = useDate;
+      localStorage.setItem('coupons', JSON.stringify(coupons));
+
+      let logs = [];
+      try {
+        const storedLogs = localStorage.getItem('logs');
+        logs = storedLogs ? JSON.parse(storedLogs) : [];
+        if (!Array.isArray(logs)) {
+          throw new Error('Logs is not an array');
+        }
+      } catch (e) {
+        console.error('localStorage 로그 파싱 오류:', e);
+        message.innerHTML = '<span class="error">로그 저장 중 오류 발생!</span>';
         return;
       }
 
-      coupon.remaining -= 1;
-      coupon.useDate = useDate;
-      if (coupon.remaining === 0) {
-        coupon.status = '사용 완료';
-      }
-      try {
-        localStorage.setItem('coupons', JSON.stringify(coupons));
-      } catch (e) {
-        console.error('localStorage 저장 오류:', e);
-        message.innerHTML = '<span class="error">쿠폰 사용 저장 중 오류 발생!</span>';
-        return;
-      }
+      logs.push({
+        date: useDate,
+        name,
+        action: '사용',
+        code: coupon.code,
+        time: formatTime(new Date())
+      });
+      localStorage.setItem('logs', JSON.stringify(logs));
+
       message.innerHTML = `<span class="success">쿠폰 1장 사용 완료! (남은 쿠폰: ${coupon.remaining})</span>`;
-      document.getElementById('use-name').value = '';
-      document.getElementById('use-date').value = getToday();
     }
 
     // 쿠폰 취소
@@ -359,71 +248,103 @@
         return;
       }
 
-      const usedCoupons = coupons
-        .filter(c => c.name === name && c.status === '사용 완료')
-        .sort((a, b) => new Date(b.useDate) - new Date(a.useDate));
-      const coupon = usedCoupons[0];
-
+      let coupons = removeExpiredCoupons();
+      const coupon = coupons.find(c => c.name === name && c.useDate && c.remaining < c.count);
       if (!coupon) {
-        message.innerHTML = '<span class="error">유효한 사용 쿠폰이 없습니다!</span>';
+        message.innerHTML = '<span class="error">취소 가능한 쿠폰이 없습니다!</span>';
         return;
       }
 
-      const useDate = new Date(coupon.useDate);
+      const now = new Date();
+      const noon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+      const useDate = new Date(`20${coupon.useDate}`);
       const today = new Date();
-      const noon = new Date(useDate.getFullYear(), useDate.getMonth(), useDate.getDate(), 12, 0, 0);
-      const expiry = new Date(coupon.expiryDate);
-      if (today > expiry) {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+
+      if (formatDate(useDate) === formatDate(yesterday)) {
+        message.innerHTML = '<span class="error">전날 사용된 쿠폰은 취소할 수 없습니다!</span>';
+        return;
+      }
+
+      if (formatDate(useDate) === formatDate(today) && now > noon) {
+        message.innerHTML = '<span class="error">오늘 12:00까지 취소 가능합니다!</span>';
+        return;
+      }
+
+      if (formatDate(now) > coupon.expireDate) {
         message.innerHTML = '<span class="error">만료된 쿠폰은 취소할 수 없습니다!</span>';
         return;
       }
-      if (today > noon) {
-        message.innerHTML = `<span class="error">사용일(${coupon.useDate}) 당일 12:00까지 취소 가능합니다!</span>`;
+
+      coupon.remaining += 1;
+      const originalUseDate = coupon.useDate;
+      coupon.useDate = '';
+      localStorage.setItem('coupons', JSON.stringify(coupons));
+
+      let logs = [];
+      try {
+        const storedLogs = localStorage.getItem('logs');
+        logs = storedLogs ? JSON.parse(storedLogs) : [];
+        if (!Array.isArray(logs)) {
+          throw new Error('Logs is not an array');
+        }
+      } catch (e) {
+        console.error('localStorage 로그 파싱 오류:', e);
+        message.innerHTML = '<span class="error">로그 저장 중 오류 발생!</span>';
+        return;
+      }
+
+      logs.push({
+        date: formatDate(now),
+        name,
+        action: '취소',
+        code: coupon.code,
+        time: formatTime(now)
+      });
+
+      let cancelHistory = [];
+      try {
+        const storedCancelHistory = localStorage.getItem('cancelHistory');
+        cancelHistory = storedCancelHistory ? JSON.parse(storedCancelHistory) : [];
+        if (!Array.isArray(cancelHistory)) {
+          throw new Error('CancelHistory is not an array');
+        }
+      } catch (e) {
+        console.error('localStorage 취소 내역 파싱 오류:', e);
+        message.innerHTML = '<span class="error">취소 내역 저장 중 오류 발생!</span>';
         return;
       }
 
       cancelHistory.push({
-        name: coupon.name,
+        name,
         code: coupon.code,
-        cancelDate: getToday(),
-        originalUseDate: coupon.useDate
+        cancelDate: formatDate(now),
+        originalUseDate
       });
-      try {
-        localStorage.setItem('cancelHistory', JSON.stringify(cancelHistory));
-      } catch (e) {
-        console.error('localStorage 저장 오류:', e);
-        message.innerHTML = '<span class="error">쿠폰 취소 저장 중 오류 발생!</span>';
-        return;
-      }
-      coupon.status = '미사용';
-      coupon.remaining += 1;
-      coupon.useDate = null;
-      try {
-        localStorage.setItem('coupons', JSON.stringify(coupons));
-      } catch (e) {
-        console.error('localStorage 저장 오류:', e);
-        message.innerHTML = '<span class="error">쿠폰 취소 저장 중 오류 발생!</span>';
-        return;
-      }
-      message.innerHTML = `<span class="success">쿠폰 취소 완료!</span>`;
-      document.getElementById('cancel-name').value = '';
+      localStorage.setItem('cancelHistory', JSON.stringify(cancelHistory));
+      localStorage.setItem('logs', JSON.stringify(logs));
+
+      message.innerHTML = `<span class="success">쿠폰 취소 완료! (남은 쿠폰: ${coupon.remaining})</span>`;
     }
 
     // 쿠폰 조회
-    function queryCoupons() {
-      const name = document.getElementById('query-name').value.trim();
+    function searchCoupon() {
+      const name = document.getElementById('search-name').value.trim();
       const tableBody = document.getElementById('coupon-table-body');
-
       tableBody.innerHTML = '';
 
       if (!name) {
-        tableBody.innerHTML = '<tr><td colspan="5"><span class="error">이름을 입력하세요!</span></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4"><span class="error">이름을 입력하세요!</span></td></tr>';
         return;
       }
 
+      let coupons = removeExpiredCoupons();
       const filteredCoupons = coupons.filter(c => c.name === name);
-      if (filteredCoupons.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5"><span class="error">해당 이름으로 발급된 쿠폰이 없습니다!</span></td></tr>';
+      if (!filteredCoupons.length) {
+        tableBody.innerHTML = '<tr><td colspan="4"><span class="error">해당 이름으로 발급된 쿠폰이 없습니다!</span></td></tr>';
         return;
       }
 
@@ -433,62 +354,51 @@
           <td>${coupon.name || ''}</td>
           <td>${coupon.issueDate || ''}</td>
           <td>${coupon.useDate || '미사용'}</td>
-          <td>${coupon.expiryDate || ''}</td>
           <td>${coupon.remaining || 0}</td>
         `;
         tableBody.appendChild(row);
       });
     }
 
-    // CSV로 내보내기
+    // CSV 내보내기
     function exportToCSV() {
+      let coupons = removeExpiredCoupons();
+      let cancelHistory = [];
       try {
-        const headers = ['이름', '쿠폰 코드', '쿠폰 수', '남은 쿠폰', '발급일', '사용일', '만료일', '상태'];
-        const csvRows = [headers.join(',')];
-        coupons.forEach(coupon => {
-          const row = [
-            coupon.name || '',
-            coupon.code || '',
-            coupon.count || 0,
-            coupon.remaining || 0,
-            coupon.issueDate || '',
-            coupon.useDate || '',
-            coupon.expiryDate || '',
-            coupon.status || ''
-          ].map(val => `"${val}"`).join(',');
-          csvRows.push(row);
-
-          const relatedCancels = cancelHistory.filter(h => h.code === coupon.code);
-          if (relatedCancels.length > 0) {
-            csvRows.push('"","취소 내역"');
-            csvRows.push('"이름","쿠폰 코드","취소일","원래 사용일"');
-            relatedCancels.forEach(cancel => {
-              const cancelRow = [
-                cancel.name || '',
-                cancel.code || '',
-                cancel.cancelDate || '',
-                cancel.originalUseDate || ''
-              ].map(val => `"${val}"`).join(',');
-              csvRows.push(cancelRow);
-            });
-          }
-        });
-
-        const csvContent = '\uFEFF' + csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'coupons.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        document.getElementById('admin-message').innerHTML = '<span class="success">CSV 파일 다운로드 완료!</span>';
-      } catch (error) {
-        console.error('CSV 내보내기 오류:', error);
-        document.getElementById('admin-message').innerHTML = '<span class="error">CSV 내보내기 중 오류 발생!</span>';
+        const storedCancelHistory = localStorage.getItem('cancelHistory');
+        cancelHistory = storedCancelHistory ? JSON.parse(storedCancelHistory) : [];
+        if (!Array.isArray(cancelHistory)) {
+          throw new Error('CancelHistory is not an array');
+        }
+      } catch (e) {
+        console.error('localStorage 취소 내역 파싱 오류:', e);
+        document.getElementById('employee-message').innerHTML = '<span class="error">취소 내역 로드 중 오류 발생!</span>';
+        return;
       }
+
+      let csvContent = '이름,쿠폰 코드,쿠폰 수,남은 쿠폰,발급일,사용일,만료일,상태\n';
+      coupons.forEach(coupon => {
+        csvContent += `"${coupon.name || ''}","${coupon.code || ''}","${coupon.count || 0}","${coupon.remaining || 0}","${coupon.issueDate || ''}","${coupon.useDate || '미사용'}","${coupon.expireDate || ''}","${coupon.remaining > 0 ? '유효' : '만료 또는 모두 사용'}\n"`;
+      });
+
+      csvContent += '\n취소 내역\n';
+      csvContent += '이름,쿠폰 코드,취소일,원래 사용일\n';
+      cancelHistory.forEach(cancel => {
+        csvContent += `"${cancel.name || ''}","${cancel.code || ''}","${cancel.cancelDate || ''}","${cancel.originalUseDate || ''}\n"`;
+      });
+
+      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'coupons.csv';
+      link.click();
+      URL.revokeObjectURL(link.href);
     }
+
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('use-date').value = '20' + getToday();
+    });
   </script>
 </body>
-</html>
+</html> Smart Ku Golf Pavilion
