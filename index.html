@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>쿠폰 관리 시스템</title>
+  <title>대기챙김 쿠폰 관리</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -110,12 +110,12 @@
 </head>
 <body>
   <h1>쿠폰 관리 시스템</h1>
-  <button id="export-button" onclick="showExportPasswordModal()">CSV로 내보내기</button>
+  <button id="export-button" onclick="showExportPasswordModal()">CSV</button>
 
   <!-- 관리자: 쿠폰 발급 -->
   <div class="section" id="admin-section">
     <h2>관리자: 쿠폰 발급</h2>
-    <input type="text" id="employee-name" placeholder="직원 이름 입력">
+    <input type="text" id="employee-name" placeholder="이름 입력">
     <select id="coupon-count">
       <option value="1">1장</option>
       <option value="2">2장</option>
@@ -203,7 +203,7 @@
     // 7일 후 기본 만료일 설정
     function getDefaultExpiry() {
       const date = new Date();
-      date.setDate(date.getDate() + 7);
+      date.setDate(date.getDate() + 14);
       return date.toISOString().split('T')[0];
     }
 
