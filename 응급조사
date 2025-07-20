@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직원 응급조사 및 비상연락처 관리</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #input-form {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #input-form label {
+            display: inline-block;
+            width: 120px;
+            margin-bottom: 10px;
+        }
+        #input-form input, #input-form select {
+            padding: 5px;
+            margin-bottom: 10px;
+            width: 200px;
+        }
+        #search {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        #employee-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #employee-table th, #employee-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #employee-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #employee-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>직원 응급조사 및 비상연락처 관리</h1>
+
+    <!-- 입력 폼 -->
+    <div id="input-form">
+        <label>소속조:</label>
+        <input type="text" id="team" placeholder="소속조 입력"><br>
+        <label>이름:</label>
+        <input type="text" id="name" placeholder="이름 입력"><br>
+        <label>기저질환:</label>
+        <input type="text" id="condition" placeholder="기저질환 입력"><br>
+        <label>복용 약물:</label>
+        <input type="text" id="medication" placeholder="복용 약물 입력"><br>
+        <label>약물 알레르기:</label>
+        <input type="text" id="allergy" placeholder="약물 알레르기 입력"><br>
+        <label>비상연락처:</label>
+        <input type="text" id="emergency-contact" placeholder="비상연락처 입력"><br>
+        <label>관계:</label>
+        <input type="text" id="relationship" placeholder="관계 입력"><br>
+        <button onclick="addEmployee()">직원 추가</button>
+    </div>
+
+    <!-- 검색 -->
+    <div id="search">
+        <label>검색:</label>
+        <input type="text" id="search-input" placeholder="소속조 또는 이름으로 검색" onkeyup="searchEmployees()">
+    </div>
+
+    <!-- 테이블 -->
+    <table id="employee-table">
+        <thead>
+            <tr>
+                <th>소속조</th>
+                <th>이름</th>
+                <th>기저질환</th>
+                <th>복용 약물</th>
+                <th>약물 알레르기</th>
+                <th>비상연락처</th>
+                <th>관계</th>
+            </tr>
+        </thead>
+        <tbody id="employee-table-body"></tbody>
+    </table>
+
+    <script>
+        // 데이터 저장 배열 (로컬 스토리지에서 불러오기)
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+
+        // 테이블 초기화
+        function renderTable(data) {
+            const tbody = document.getElementById('employee-table-body');
+            tbody.innerHTML = '';
+            data.forEach(employee => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.team}</td>
+                    <td>${employee.name}</td>
+                    <td>${employee.condition}</td>
+                    <td>${employee.medication}</td>
+                    <td>${employee.allergy}</td>
+                    <td>${employee.emergencyContact}</td>
+                    <td>${employee.relationship}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 직원 추가
+        function addEmployee() {
+            const employee = {
+                team: document.getElementById('team').value,
+                name: document.getElementById('name').value,
+                condition: document.getElementById('condition').value,
+                medication: document.getElementById('medication').value,
+                allergy: document.getElementById('allergy').value,
+                emergencyContact: document.getElementById('emergency-contact').value,
+                relationship: document.getElementById('relationship').value
+            };
+
+            if (employee.name && employee.team) {
+                employees.push(employee);
+                localStorage.setItem('employees', JSON.stringify(employees));
+                renderTable(employees);
+                clearForm();
+            } else {
+                alert('소속조와 이름을 입력해주세요.');
+            }
+        }
+
+        // 폼 초기화
+        function clearForm() {
+            document.getElementById('team').value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('condition').value = '';
+            document.getElementById('medication').value = '';
+            document.getElementById('allergy').value = '';
+            document.getElementById('emergency-contact').value = '';
+            document.getElementById('relationship').value = '';
+        }
+
+        // 검색 기능
+        function searchEmployees() {
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+            const filteredEmployees = employees.filter(employee =>
+                employee.team.toLowerCase().includes(searchInput) ||
+                employee.name.toLowerCase().includes(searchInput)
+            );
+            renderTable(filteredEmployees);
+        }
+
+        // 초기 테이블 렌더링
+        renderTable(employees);
+    </script>
+</body>
+</html>
